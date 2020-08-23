@@ -11,4 +11,9 @@ public class UserServiceImplement extends BaseService implements UserService {
     public void saveUser(User user) {
         userRepository.save(user);
     }
+
+    @Override
+    public User getByUsername(String username) {
+        return userRepository.findByUsername(username);
+    }
 }

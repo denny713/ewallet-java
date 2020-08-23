@@ -12,7 +12,7 @@ import javax.validation.Valid;
 @RequestMapping("/user")
 public class UserController extends BaseController {
 
-    public Response response = new Response();
+    private Response response = new Response();
 
     @PostMapping("/save")
     @ResponseBody
@@ -26,6 +26,28 @@ public class UserController extends BaseController {
             userService.saveUser(usr);
             response.setResult(true);
             response.setMessage("Success Save User");
+        } catch (Exception d) {
+            response.setResult(false);
+            response.setMessage(d.getMessage());
+        }
+        return response;
+    }
+
+    @PostMapping("/update")
+    @ResponseBody
+    public Response updateUser(@Valid @RequestBody UserInput user) {
+        try {
+            User usr = userService.getByUsername(user.getUsername());
+            if (usr != null) {
+                usr.setEmail(user.getEmail());
+                usr.setPassword(Encrypt.textEncrypt(user.getPassword()));
+                userService.saveUser(usr);
+                response.setResult(true);
+                response.setMessage("Success Update Data");
+            } else {
+                response.setResult(false);
+                response.setMessage("Username " + user.getUsername() + " Not Found");
+            }
         } catch (Exception d) {
             response.setResult(false);
             response.setMessage(d.getMessage());
