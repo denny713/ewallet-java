@@ -10,4 +10,6 @@ public interface UserService {
     public void saveUser(User user);
 
     public User getByUsername(String username);
+
+    public void deleteUser(User user);
 }

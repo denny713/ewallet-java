@@ -16,4 +16,9 @@ public class UserServiceImplement extends BaseService implements UserService {
     public User getByUsername(String username) {
         return userRepository.findByUsername(username);
     }
+
+    @Override
+    public void deleteUser(User user) {
+        userRepository.delete(user);
+    }
 }

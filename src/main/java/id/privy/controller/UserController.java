@@ -54,4 +54,24 @@ public class UserController extends BaseController {
         }
         return response;
     }
+
+    @DeleteMapping("/delete/{id}")
+    @ResponseBody
+    public Response deleteUser(@PathVariable("id") String id) {
+        try {
+            User user = userService.getByUsername(id);
+            if (user != null) {
+                userService.deleteUser(user);
+                response.setResult(true);
+                response.setMessage("Success Delete Data");
+            } else {
+                response.setResult(false);
+                response.setMessage("Username " + id + " Not Found");
+            }
+        } catch (Exception h) {
+            response.setResult(false);
+            response.setMessage(h.getMessage());
+        }
+        return response;
+    }
 }
