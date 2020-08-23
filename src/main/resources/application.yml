@@ -8,9 +8,8 @@ spring:
   jpa:
     show-sql: true
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: none
 server:
   port: 8070
   servlet:
     context-path: /
-!
