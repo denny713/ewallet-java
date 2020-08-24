@@ -3,16 +3,23 @@ package id.privy.controller;
 import id.privy.entity.User;
 import id.privy.model.Response;
 import id.privy.model.UserInput;
+import id.privy.model.UserLogin;
 import id.privy.util.Encrypt;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 @RequestMapping("/user")
 public class UserController extends BaseController {
 
     private Response response = new Response();
+    private UserLogin login = new UserLogin();
+
+
 
     @PostMapping("/save")
     @ResponseBody
@@ -25,7 +32,7 @@ public class UserController extends BaseController {
             usr.setStatus(user.getStatus());
             userService.saveUser(usr);
             response.setResult(true);
-            response.setMessage("Success Save User");
+            response.setMessage("Berhasil Simpan Data");
         } catch (Exception d) {
             response.setResult(false);
             response.setMessage(d.getMessage());
@@ -35,7 +42,27 @@ public class UserController extends BaseController {
 
     @PostMapping("/update")
     @ResponseBody
-    public Response updateUser(@Valid @RequestBody UserInput user) {
+    public Response updateUser(@Valid @RequestBody UserInput user, HttpServletRequest request) {
+        login = this.getUserLogin(request);
+        if (login.getUsername() != null) {
+            if (login.getStatus().equalsIgnoreCase("admin")) {
+                response = updateData(user);
+            } else {
+                if (user.getUsername().equals(login.getUsername())) {
+                    response = updateData(user);
+                } else {
+                    response.setResult(false);
+                    response.setMessage("Anda Tidak Berhak Mengubah Data User " + user.getUsername());
+                }
+            }
+        } else {
+            response.setResult(false);
+            response.setMessage("Anda Belum Login");
+        }
+        return response;
+    }
+
+    public Response updateData(UserInput user) {
         try {
             User usr = userService.getByUsername(user.getUsername());
             if (usr != null) {
@@ -43,10 +70,10 @@ public class UserController extends BaseController {
                 usr.setPassword(Encrypt.textEncrypt(user.getPassword()));
                 userService.saveUser(usr);
                 response.setResult(true);
-                response.setMessage("Success Update Data");
+                response.setMessage("Berhasil Ubah Data");
             } else {
                 response.setResult(false);
-                response.setMessage("Username " + user.getUsername() + " Not Found");
+                response.setMessage("Username " + user.getUsername() + " Tidak Ditemukan");
             }
         } catch (Exception d) {
             response.setResult(false);
@@ -57,16 +84,36 @@ public class UserController extends BaseController {
 
     @DeleteMapping("/delete/{id}")
     @ResponseBody
-    public Response deleteUser(@PathVariable("id") String id) {
+    public Response deleteUser(@PathVariable("id") String id, HttpServletRequest request) {
+        login = this.getUserLogin(request);
+        if (login.getUsername() != null) {
+            if (login.getStatus().equalsIgnoreCase("admin")) {
+                response = deleteUser(id);
+            } else {
+                if (login.getUsername().equalsIgnoreCase(id)) {
+                    response = deleteUser(id);
+                } else {
+                    response.setResult(false);
+                    response.setMessage("Anda Tidak Berhak Menghapus Data User " + id);
+                }
+            }
+        } else {
+            response.setResult(false);
+            response.setMessage("Anda Belum Login");
+        }
+        return response;
+    }
+
+    public Response deleteUser(String id) {
         try {
             User user = userService.getByUsername(id);
             if (user != null) {
                 userService.deleteUser(user);
                 response.setResult(true);
-                response.setMessage("Success Delete Data");
+                response.setMessage("Berhasil Hapus Data");
             } else {
                 response.setResult(false);
-                response.setMessage("Username " + id + " Not Found");
+                response.setMessage("Username " + id + " Tidak Ditemukan");
             }
         } catch (Exception h) {
             response.setResult(false);
