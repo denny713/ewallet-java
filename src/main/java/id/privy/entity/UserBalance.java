@@ -20,7 +20,7 @@ public class UserBalance {
 
     @OneToMany(mappedBy = Field.ID, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @NotFound(action = NotFoundAction.IGNORE)
-    @OrderBy("id ASC")
+    @OrderBy("userBalanceId ASC")
     private List<UserBalanceHistory> userBalanceHistories;
 
     @Column(name = Field.USER_ID)

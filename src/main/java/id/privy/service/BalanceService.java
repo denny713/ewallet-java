@@ -16,4 +16,6 @@ public interface BalanceService {
     public List<BankBalance> getBankBalance();
 
     public BankBalance getByUserId(Integer userId);
+
+    public void saveUserBalance(UserBalance userBalance);
 }

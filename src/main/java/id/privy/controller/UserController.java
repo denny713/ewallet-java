@@ -1,5 +1,6 @@
 package id.privy.controller;
 
+import id.privy.constant.Message;
 import id.privy.entity.User;
 import id.privy.model.Response;
 import id.privy.model.UserInput;
@@ -38,7 +39,7 @@ public class UserController extends BaseController {
             }
         } else {
             response.setResult(false);
-            response.setMessage("Anda Belum Login");
+            response.setMessage(Message.UNLOGIN);
             hasil.add(response);
         }
         return hasil;
@@ -81,11 +82,11 @@ public class UserController extends BaseController {
                 }
             } else {
                 response.setResult(false);
-                response.setMessage("Anda Belum Login");
+                response.setMessage(Message.UNLOGIN);
             }
         } else {
             response.setResult(false);
-            response.setMessage("Anda Belum Login");
+            response.setMessage(Message.UNLOGIN);
         }
         return response;
     }

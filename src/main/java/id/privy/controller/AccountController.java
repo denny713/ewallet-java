@@ -1,6 +1,7 @@
 package id.privy.controller;
 
 import com.google.gson.Gson;
+import id.privy.constant.Message;
 import id.privy.entity.User;
 import id.privy.model.Login;
 import id.privy.model.Response;
@@ -45,12 +46,12 @@ public class AccountController extends BaseController {
     public Response logout(HttpServletRequest request, HttpSession session) {
         if (isLogin(request)) {
             response.setResult(false);
-            response.setMessage("Anda Belum Login");
+            response.setMessage(Message.UNLOGIN);
         } else {
             UserLogin login = this.getUserLogin(request);
             if (login.getUsername() == null) {
                 response.setResult(false);
-                response.setMessage("Anda Belum Login");
+                response.setMessage(Message.UNLOGIN);
             } else {
                 session.removeAttribute("UserLogin");
                 response.setResult(true);
