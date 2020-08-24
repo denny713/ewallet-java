@@ -19,7 +19,30 @@ public class UserController extends BaseController {
     private Response response = new Response();
     private UserLogin login = new UserLogin();
 
-
+    @GetMapping("")
+    @ResponseBody
+    public List<Object> all(HttpServletRequest request) {
+        List<Object> hasil = new ArrayList<>();
+        if (isLogin(request)) {
+            login = this.getUserLogin(request);
+            if (login.getUsername() == null) {
+                response.setResult(false);
+                response.setMessage("Anda Belum Login");
+                hasil.add(response);
+            } else {
+                if (login.getStatus().equalsIgnoreCase("admin")) {
+                    hasil.addAll(userService.getAll());
+                } else {
+                    hasil.add(userService.getByUsername(login.getUsername()));
+                }
+            }
+        } else {
+            response.setResult(false);
+            response.setMessage("Anda Belum Login");
+            hasil.add(response);
+        }
+        return hasil;
+    }
 
     @PostMapping("/save")
     @ResponseBody
@@ -43,17 +66,22 @@ public class UserController extends BaseController {
     @PostMapping("/update")
     @ResponseBody
     public Response updateUser(@Valid @RequestBody UserInput user, HttpServletRequest request) {
-        login = this.getUserLogin(request);
-        if (login.getUsername() != null) {
-            if (login.getStatus().equalsIgnoreCase("admin")) {
-                response = updateData(user);
-            } else {
-                if (user.getUsername().equals(login.getUsername())) {
+        if (isLogin(request)) {
+            login = this.getUserLogin(request);
+            if (login.getUsername() != null) {
+                if (login.getStatus().equalsIgnoreCase("admin")) {
                     response = updateData(user);
                 } else {
-                    response.setResult(false);
-                    response.setMessage("Anda Tidak Berhak Mengubah Data User " + user.getUsername());
+                    if (user.getUsername().equals(login.getUsername())) {
+                        response = updateData(user);
+                    } else {
+                        response.setResult(false);
+                        response.setMessage("Anda Tidak Berhak Mengubah Data User " + user.getUsername());
+                    }
                 }
+            } else {
+                response.setResult(false);
+                response.setMessage("Anda Belum Login");
             }
         } else {
             response.setResult(false);
@@ -85,17 +113,22 @@ public class UserController extends BaseController {
     @DeleteMapping("/delete/{id}")
     @ResponseBody
     public Response deleteUser(@PathVariable("id") String id, HttpServletRequest request) {
-        login = this.getUserLogin(request);
-        if (login.getUsername() != null) {
-            if (login.getStatus().equalsIgnoreCase("admin")) {
-                response = deleteUser(id);
-            } else {
-                if (login.getUsername().equalsIgnoreCase(id)) {
+        if (isLogin(request)) {
+            login = this.getUserLogin(request);
+            if (login.getUsername() != null) {
+                if (login.getStatus().equalsIgnoreCase("admin")) {
                     response = deleteUser(id);
                 } else {
-                    response.setResult(false);
-                    response.setMessage("Anda Tidak Berhak Menghapus Data User " + id);
+                    if (login.getUsername().equalsIgnoreCase(id)) {
+                        response = deleteUser(id);
+                    } else {
+                        response.setResult(false);
+                        response.setMessage("Anda Tidak Berhak Menghapus Data User " + id);
+                    }
                 }
+            } else {
+                response.setResult(false);
+                response.setMessage("Anda Belum Login");
             }
         } else {
             response.setResult(false);

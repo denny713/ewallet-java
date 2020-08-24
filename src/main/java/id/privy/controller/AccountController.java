@@ -43,14 +43,19 @@ public class AccountController extends BaseController {
     @PostMapping("/logout")
     @ResponseBody
     public Response logout(HttpServletRequest request, HttpSession session) {
-        UserLogin login = this.getUserLogin(request);
-        if (login.getUsername() == null) {
+        if (isLogin(request)) {
             response.setResult(false);
             response.setMessage("Anda Belum Login");
         } else {
-            session.removeAttribute("UserLogin");
-            response.setResult(true);
-            response.setMessage("Berhasil Logout");
+            UserLogin login = this.getUserLogin(request);
+            if (login.getUsername() == null) {
+                response.setResult(false);
+                response.setMessage("Anda Belum Login");
+            } else {
+                session.removeAttribute("UserLogin");
+                response.setResult(true);
+                response.setMessage("Berhasil Logout");
+            }
         }
         return response;
     }
