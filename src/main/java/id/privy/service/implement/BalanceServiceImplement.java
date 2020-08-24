@@ -34,22 +34,24 @@ public class BalanceServiceImplement extends BaseService implements BalanceServi
 
     @Override
     public void saveUserBalance(UserBalance userBalance) {
-        Integer id = 0;
         if (userBalance.getId() == null) {
-            id = userBalanceRepository.getUserBalanceSequence();
-            userBalance.setId(id);
-        } else {
-            id = userBalance.getId();
-        }
-        List<UserBalanceHistory> history = userBalanceHistoryRepository.findByIdOrderByUserBalanceIdDesc(id);
-        for (int x = 0; x < userBalance.getUserBalanceHistories().size(); x++) {
-            Integer detailId = x + 1;
-            if (!history.isEmpty()) {
-                detailId = history.get(0).getUserBalanceId() + detailId;
+            Integer id = 0;
+            if (userBalance.getId() == null) {
+                id = userBalanceRepository.getUserBalanceSequence();
+                userBalance.setId(id);
+            } else {
+                id = userBalance.getId();
             }
-            userBalance.getUserBalanceHistories().get(x).setId(id);
-            userBalance.getUserBalanceHistories().get(x).setUserBalanceId(detailId);
-            userBalance.getUserBalanceHistories().get(x).setIdHistory("User" + id + detailId);
+            List<UserBalanceHistory> history = userBalanceHistoryRepository.findByIdOrderByUserBalanceIdDesc(id);
+            for (int x = 0; x < userBalance.getUserBalanceHistories().size(); x++) {
+                Integer detailId = x + 1;
+                if (!history.isEmpty()) {
+                    detailId = history.get(0).getUserBalanceId() + detailId;
+                }
+                userBalance.getUserBalanceHistories().get(x).setId(id);
+                userBalance.getUserBalanceHistories().get(x).setUserBalanceId(detailId);
+                userBalance.getUserBalanceHistories().get(x).setIdHistory("User" + id + detailId);
+            }
         }
         userBalanceRepository.save(userBalance);
     }

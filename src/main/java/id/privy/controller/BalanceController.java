@@ -202,6 +202,13 @@ public class BalanceController extends BaseController {
                                 response.setResult(false);
                                 response.setMessage("Tidak Ada Saldo Untuk Ditransfer");
                             } else {
+                                Integer ids = 0;
+                                for (int x = 0; x < userBalance.getUserBalanceHistories().size(); x++) {
+                                    if (userBalance.getUserBalanceHistories().get(x).getUserBalanceId() > ids) {
+                                        ids = userBalance.getUserBalanceHistories().get(x).getUserBalanceId();
+                                    }
+                                }
+                                ids = ids + 1;
                                 selisih = userBalance.getBalance() - balance.getTotal();
                                 if (selisih < 0.0) {
                                     response.setResult(false);
@@ -209,6 +216,9 @@ public class BalanceController extends BaseController {
                                 } else {
                                     List<UserBalanceHistory> histories = new ArrayList<>();
                                     UserBalanceHistory userHistory = new UserBalanceHistory();
+                                    userHistory.setId(userBalance.getId());
+                                    userHistory.setUserBalanceId(ids);
+                                    userHistory.setIdHistory("User" + userBalance.getId() + ids);
                                     userHistory.setActivity(balance.getActivity());
                                     userHistory.setBalanceBefore(userBalance.getBalance());
                                     userHistory.setBalanceAfter(selisih);
