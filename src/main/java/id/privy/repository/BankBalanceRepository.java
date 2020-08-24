@@ -10,4 +10,6 @@ public interface BankBalanceRepository extends JpaRepository<BankBalance, Intege
 
     @Query(value = "select nextval('bank-balance-seq')", nativeQuery = true)
     public Integer getBankBalanceSequence();
+
+    public BankBalance findByUserId(Integer userId);
 }
