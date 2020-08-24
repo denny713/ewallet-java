@@ -1,6 +1,7 @@
 package id.privy.service.implement;
 
 import id.privy.entity.BankBalance;
+import id.privy.entity.BankBalanceHistory;
 import id.privy.entity.UserBalance;
 import id.privy.entity.UserBalanceHistory;
 import id.privy.service.BalanceService;
@@ -40,7 +41,7 @@ public class BalanceServiceImplement extends BaseService implements BalanceServi
         } else {
             id = userBalance.getId();
         }
-        List<UserBalanceHistory> history = userBalanceHistoryRepository.findByIdOrderByUserBalanceIdDesc(userBalance.getId());
+        List<UserBalanceHistory> history = userBalanceHistoryRepository.findByIdOrderByUserBalanceIdDesc(id);
         for (int x = 0; x < userBalance.getUserBalanceHistories().size(); x++) {
             Integer detailId = x + 1;
             if (!history.isEmpty()) {
@@ -48,7 +49,30 @@ public class BalanceServiceImplement extends BaseService implements BalanceServi
             }
             userBalance.getUserBalanceHistories().get(x).setId(id);
             userBalance.getUserBalanceHistories().get(x).setUserBalanceId(detailId);
+            userBalance.getUserBalanceHistories().get(x).setIdHistory("User" + id + detailId);
         }
         userBalanceRepository.save(userBalance);
+    }
+
+    @Override
+    public void saveBankBalance(BankBalance bankBalance) {
+        Integer id = 0;
+        if (bankBalance.getId() != null) {
+            id = bankBalance.getId();
+        } else {
+            id = bankBalanceRepository.getBankBalanceSequence();
+            bankBalance.setId(id);
+        }
+        List<BankBalanceHistory> banks = bankBalanceHistoryRepository.findByIdOrderByBankBalanceIdDesc(id);
+        for (int c = 0; c < bankBalance.getBankBalanceHistories().size(); c++) {
+            Integer historyId = c + 1;
+            if (!banks.isEmpty()) {
+                historyId = banks.get(0).getBankBalanceId() + historyId;
+            }
+            bankBalance.getBankBalanceHistories().get(c).setIdHistory("Bank" + id + historyId);
+            bankBalance.getBankBalanceHistories().get(c).setBankBalanceId(historyId);
+            bankBalance.getBankBalanceHistories().get(c).setId(id);
+        }
+        bankBalanceRepository.save(bankBalance);
     }
 }

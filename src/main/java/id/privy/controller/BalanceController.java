@@ -1,10 +1,7 @@
 package id.privy.controller;
 
 import id.privy.constant.Message;
-import id.privy.entity.BankBalance;
-import id.privy.entity.User;
-import id.privy.entity.UserBalance;
-import id.privy.entity.UserBalanceHistory;
+import id.privy.entity.*;
 import id.privy.model.BalanceInput;
 import id.privy.model.Response;
 import id.privy.model.UserLogin;
@@ -125,15 +122,53 @@ public class BalanceController extends BaseController {
                 response.setResult(false);
                 response.setMessage(Message.UNLOGIN);
             } else {
-                if (login.getStatus().equalsIgnoreCase("admin")) {
-                    response = topUp(balance, request);
-                } else {
-                    if (login.getUsername().equals(balance.getUsername())) {
-                        response = topUp(balance, request);
-                    } else {
+                if (login.getUsername().equals(balance.getUsername())) {
+                    try {
+                        List<UserBalanceHistory> balanceHistory = new ArrayList<>();
+                        Double total;
+                        User user = userService.getByUsername(balance.getUsername());
+                        if (user != null) {
+                            UserBalance userBalance = balanceService.getByUser(user.getId());
+                            UserBalanceHistory detail = new UserBalanceHistory();
+                            detail.setActivity(balance.getActivity());
+                            detail.setIp(InetAddress.getLocalHost().getHostAddress());
+                            detail.setType(balance.getType());
+                            detail.setLocation(balance.getLocation());
+                            detail.setUserAgent(balance.getAgent());
+                            detail.setAuthor(this.getUserLogin(request).getUsername());
+                            if (userBalance != null) {
+                                total = balance.getTotal() + userBalance.getBalance();
+                                userBalance.setUserBalanceHistories(new ArrayList<>());
+                                detail.setBalanceBefore(userBalance.getBalance());
+                                detail.setBalanceAfter(total);
+                                balanceHistory.add(detail);
+                                userBalance.setBalance(total);
+                                userBalance.setAchieve(balance.getTotal());
+                                userBalance.setUserBalanceHistories(balanceHistory);
+                            } else {
+                                userBalance = new UserBalance();
+                                userBalance.setUserId(user.getId());
+                                userBalance.setBalance(balance.getTotal());
+                                userBalance.setAchieve(balance.getTotal());
+                                detail.setBalanceBefore(0.0);
+                                detail.setBalanceAfter(balance.getTotal());
+                                balanceHistory.add(detail);
+                                userBalance.setUserBalanceHistories(balanceHistory);
+                            }
+                            balanceService.saveUserBalance(userBalance);
+                            response.setResult(true);
+                            response.setMessage("Berhasil Top Up Saldo");
+                        } else {
+                            response.setResult(false);
+                            response.setMessage("Username " + balance.getUsername() + " Tidak Ditemukan");
+                        }
+                    } catch (Exception k) {
                         response.setResult(false);
-                        response.setMessage("Tidak Bisa Top Up Dengan User Yang Berbeda");
+                        response.setMessage(k.getMessage());
                     }
+                } else {
+                    response.setResult(false);
+                    response.setMessage("Tidak Bisa Top Up Dengan User Yang Berbeda");
                 }
             }
         } else {
@@ -143,56 +178,102 @@ public class BalanceController extends BaseController {
         return response;
     }
 
-    public Response topUp(BalanceInput balance, HttpServletRequest request) {
-        try {
-            List<UserBalanceHistory> balanceHistory = new ArrayList<>();
-            Double total;
-            User user = userService.getByUsername(balance.getUsername());
-            if (user != null) {
-                UserBalance userBalance = balanceService.getByUser(user.getId());
-                if (userBalance != null) {
-                    total = balance.getTotal() + userBalance.getBalance();
-                    userBalance.setBalance(total);
-                    userBalance.setAchieve(balance.getTotal());
-                    userBalance.setUserBalanceHistories(new ArrayList<>());
-                    UserBalanceHistory detail = new UserBalanceHistory();
-                    detail.setActivity(balance.getActivity());
-                    detail.setBalanceBefore(0.0);
-                    detail.setBalanceAfter(balance.getTotal());
-                    detail.setIp(InetAddress.getLocalHost().getHostAddress());
-                    detail.setType(balance.getType());
-                    detail.setLocation(balance.getLocation());
-                    detail.setUserAgent(balance.getAgent());
-                    detail.setAuthor(this.getUserLogin(request).getUsername());
-                    balanceHistory.add(detail);
-                    userBalance.setUserBalanceHistories(balanceHistory);
-                } else {
-                    userBalance = new UserBalance();
-                    userBalance.setUserId(user.getId());
-                    userBalance.setBalance(balance.getTotal());
-                    userBalance.setAchieve(balance.getTotal());
-                    UserBalanceHistory history = new UserBalanceHistory();
-                    history.setActivity(balance.getActivity());
-                    history.setBalanceBefore(0.0);
-                    history.setBalanceAfter(balance.getTotal());
-                    history.setIp(InetAddress.getLocalHost().getHostAddress());
-                    history.setType(balance.getType());
-                    history.setLocation(balance.getLocation());
-                    history.setUserAgent(balance.getAgent());
-                    history.setAuthor(this.getUserLogin(request).getUsername());
-                    balanceHistory.add(history);
-                    userBalance.setUserBalanceHistories(balanceHistory);
-                }
-                balanceService.saveUserBalance(userBalance);
-                response.setResult(true);
-                response.setMessage("Berhasil Top Up");
-            } else {
+    @PostMapping("/transfer")
+    @ResponseBody
+    public Response transferBalance(@Valid @RequestBody BalanceInput balance, HttpServletRequest request) {
+        if (isLogin(request)) {
+            login = this.getUserLogin(request);
+            if (login.getUsername() == null) {
                 response.setResult(false);
-                response.setMessage("Username " + balance.getUsername() + " Tidak Ditemukan");
+                response.setMessage(Message.UNLOGIN);
+            } else {
+                if (login.getUsername().equals(balance.getUsername())) {
+                    try {
+                        List<BankBalanceHistory> bankHistory = new ArrayList<>();
+                        Double total;
+                        Double selisih;
+                        User user = userService.getByUsername(balance.getUsername());
+                        if (user == null) {
+                            response.setResult(false);
+                            response.setMessage("Username " + balance.getUsername() + " Tidak Ditemukan");
+                        } else {
+                            UserBalance userBalance = balanceService.getByUser(user.getId());
+                            if (userBalance == null) {
+                                response.setResult(false);
+                                response.setMessage("Tidak Ada Saldo Untuk Ditransfer");
+                            } else {
+                                selisih = userBalance.getBalance() - balance.getTotal();
+                                if (selisih < 0.0) {
+                                    response.setResult(false);
+                                    response.setMessage("Saldo Tidak Cukup Untuk Dilakukan Transfer");
+                                } else {
+                                    List<UserBalanceHistory> histories = new ArrayList<>();
+                                    UserBalanceHistory userHistory = new UserBalanceHistory();
+                                    userHistory.setActivity(balance.getActivity());
+                                    userHistory.setBalanceBefore(userBalance.getBalance());
+                                    userHistory.setBalanceAfter(selisih);
+                                    userHistory.setIp(InetAddress.getLocalHost().getHostAddress());
+                                    userHistory.setType("Credit");
+                                    userHistory.setLocation(balance.getLocation());
+                                    userHistory.setUserAgent(balance.getAgent());
+                                    userHistory.setAuthor(this.getUserLogin(request).getUsername());
+                                    histories.add(userHistory);
+                                    userBalance.setUserBalanceHistories(histories);
+                                    userBalance.setBalance(selisih);
+                                    userBalance.setAchieve(balance.getTotal());
+                                    BankBalanceHistory history = new BankBalanceHistory();
+                                    history.setActivity(balance.getActivity());
+                                    history.setAuthor(this.getUserLogin(request).getUsername());
+                                    history.setIp(InetAddress.getLocalHost().getHostAddress());
+                                    history.setLocation(balance.getLocation());
+                                    history.setType(balance.getType());
+                                    history.setUserAgent(balance.getAgent());
+                                    BankBalance bankBalance = balanceService.getByUserId(user.getId());
+                                    if (bankBalance == null) {
+                                        bankBalance = new BankBalance();
+                                        bankBalance.setAchieve(balance.getTotal());
+                                        bankBalance.setBalance(balance.getTotal());
+                                        bankBalance.setCode(balance.getCode());
+                                        bankBalance.setEnable(true);
+                                        bankBalance.setUserId(user.getId());
+                                        history.setBalanceBefore(0.0);
+                                        history.setBalanceAfter(balance.getTotal());
+                                        bankHistory.add(history);
+                                        bankBalance.setBankBalanceHistories(bankHistory);
+                                    } else {
+                                        total = bankBalance.getBalance() + balance.getTotal();
+                                        history.setBalanceBefore(bankBalance.getBalance());
+                                        history.setBalanceAfter(total);
+                                        bankHistory.add(history);
+                                        bankBalance.setBalance(total);
+                                        bankBalance.setAchieve(balance.getTotal());
+                                        bankBalance.setCode(balance.getCode());
+                                        bankBalance.setBankBalanceHistories(bankHistory);
+                                    }
+                                    try {
+                                        balanceService.saveBankBalance(bankBalance);
+                                        balanceService.saveUserBalance(userBalance);
+                                        response.setResult(true);
+                                        response.setMessage("Berhasil Transfer Saldo");
+                                    } catch (Exception f) {
+                                        response.setResult(false);
+                                        response.setMessage(f.getMessage());
+                                    }
+                                }
+                            }
+                        }
+                    } catch (Exception j) {
+                        response.setResult(false);
+                        response.setMessage(j.getMessage());
+                    }
+                } else {
+                    response.setResult(false);
+                    response.setMessage("Tidak Bisa Transfer Dengan User Yang Berbeda");
+                }
             }
-        } catch (Exception k) {
+        } else {
             response.setResult(false);
-            response.setMessage(k.getMessage());
+            response.setMessage(Message.UNLOGIN);
         }
         return response;
     }

@@ -4,10 +4,7 @@ import id.privy.constant.Field;
 import id.privy.constant.Tabel;
 import lombok.Data;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 @Data
 @Entity
@@ -17,7 +14,6 @@ public class BankBalanceHistory {
     @Column(name = Field.ID)
     private Integer id;
 
-    @Id
     @Column(name = Field.BANK_BALANCE)
     private Integer bankBalanceId;
 
@@ -44,4 +40,8 @@ public class BankBalanceHistory {
 
     @Column(name = Field.AUTHOR)
     private String author;
+
+    @Id
+    @Column(name = Field.ID_HISTORY)
+    private String idHistory;
 }

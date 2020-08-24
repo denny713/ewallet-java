@@ -44,7 +44,7 @@ public class AccountController extends BaseController {
     @PostMapping("/logout")
     @ResponseBody
     public Response logout(HttpServletRequest request, HttpSession session) {
-        if (isLogin(request)) {
+        if (!isLogin(request)) {
             response.setResult(false);
             response.setMessage(Message.UNLOGIN);
         } else {

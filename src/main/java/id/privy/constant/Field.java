@@ -26,4 +26,5 @@ public class Field {
     public static final String AGENT = "user_agent";
     public static final String AUTHOR = "author";
     public static final String STATUS = "status";
+    public static final String ID_HISTORY = "id_history";
 }
