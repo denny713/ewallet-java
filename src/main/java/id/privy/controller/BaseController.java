@@ -2,6 +2,7 @@ package id.privy.controller;
 
 import com.google.gson.Gson;
 import id.privy.model.UserLogin;
+import id.privy.service.BalanceService;
 import id.privy.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -15,6 +16,9 @@ public class BaseController {
 
     @Autowired
     protected UserService userService;
+
+    @Autowired
+    protected BalanceService balanceService;
 
     protected void clearCookie(HttpServletRequest request, HttpServletResponse response) {
         Cookie[] cookies = request.getCookies();

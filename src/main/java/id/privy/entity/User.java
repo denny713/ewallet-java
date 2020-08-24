@@ -3,17 +3,20 @@ package id.privy.entity;
 import id.privy.constant.Field;
 import id.privy.constant.Tabel;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.Id;
 import javax.persistence.Table;
 
-@EqualsAndHashCode(callSuper = true)
 @Data
 @Entity
 @Table(name = Tabel.USER)
-public class User extends Identity {
+public class User {
+
+    @Id
+    @Column(name = Field.ID)
+    private Integer id;
 
     @Column(name = Field.USER)
     private String username;
