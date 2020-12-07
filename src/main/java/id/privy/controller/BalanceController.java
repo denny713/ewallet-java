@@ -138,7 +138,7 @@ public class BalanceController extends BaseController {
                             detail.setAuthor(this.getUserLogin(request).getUsername());
                             if (userBalance != null) {
                                 total = balance.getTotal() + userBalance.getBalance();
-                                userBalance.setUserBalanceHistories(new ArrayList<>());
+                                userBalance.setUserBalanceHistories(null);
                                 detail.setBalanceBefore(userBalance.getBalance());
                                 detail.setBalanceAfter(total);
                                 balanceHistory.add(detail);
